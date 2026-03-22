@@ -1,18 +1,51 @@
 jobs:
-  - company: 테크스타트업
-    role: 풀스택 개발자
-    period: "2022 - 현재"
-    tech: ["React", "Next.js", "Node.js", "PostgreSQL"]
+  - company: 한국수력원자력 (KHNP)
+    role: 현장 실습 / 인턴
+    period: "2016.08 ~ 2020.01"
+    tech: []
     description: |
-      웹 서비스 개발 및 유지보수를 담당하고 있습니다.
-      사용자 경험 개선과 성능 최적화에 집중하고 있어요.
-  - company: IT 에이전시
+      원자력 발전소 시스템 및 기계 설비 유지보수 업무를 수행했습니다.
+      비개발 직군으로 근무하다가 개발에 대한 열정으로 이직을 결심했습니다.
+
+  - company: 티맥스오피스 (Tmax Office)
+    role: C++ 개발자
+    period: "2020.02 ~ 2022.02"
+    tech: ["C++", "Windows"]
+    description: |
+      Windows 기반 문서 편집기(hwp, Word, Excel, PowerPoint) 개발.
+      한글 문서 편집기(ToHangul/ToOffice) 담당.
+      머리글/바닥글, 섹션, 다단 등 복잡한 레이아웃 기능 구현.
+      공유 문서 편집기 아키텍처 개선 작업 수행.
+
+  - company: 티맥스오피스 (Tmax Office)
     role: 프론트엔드 개발자
-    period: "2020 - 2022"
-    tech: ["Vue.js", "JavaScript", "CSS"]
+    period: "2022.02 ~ 2023.09"
+    tech: ["JavaScript", "TypeScript", "React", "Webpack", "Jest"]
     description: |
-      다양한 클라이언트의 웹사이트를 개발했습니다.
+      웹 오피스 공통 프레임워크 개발 (docx, pptx, xlsx, hwp 포맷 지원).
+      클립보드 프레임워크, 선택(Selection) 프레임워크 구축.
+      CI/CD 관리, Webpack v4→v5 마이그레이션, Jest 최적화 (v26→v29).
+      React v16→v18 마이그레이션 담당.
+
+  - company: 액스 (Ax)
+    role: 프론트엔드 개발자
+    period: "2023.09 ~ 2023.12"
+    tech: ["React", "TypeScript"]
+    description: |
+      여행 B2B 서비스 스타트업.
+      계정 관리, 상품 미리보기 페이지 등 신규 기능 구현.
+      CI/CD 개선 및 공통 구조 작업.
+      3개월 내 배정된 이슈 180개 중 140개(78%) 해결.
+      디자인 시스템 컴포넌트 구현: Color, Label, Icon, InputField, TextArea, Dropdown, Dialog, Modal.
+
 education:
-  - school: 서울 대학교
-    major: 컴퓨터공학
-    period: "2014 - 2018"
+  - school: 서울대학교
+    major: 원자핵공학과
+    period: "2010.03 ~ 2016.08"
+    gpa: "3.2/4.3"
+    note: |
+      졸업 후 대학원 연구실에서 1년간 인턴 생활을 했습니다.
+      연구/탐구가 적성에 맞다고 생각했지만, 원하는 연구를 마음대로 할 수 없는
+      딱딱한 대학원 환경이 맞지 않아 취업을 선택했습니다.
+      발전소에서 단순 업무/지방 근무/교대 근무가 적성에 맞지 않았고,
+      전공 친구들이 개발로 전향해 잘 적응하는 것을 보고 커리어 전환을 결심했습니다.

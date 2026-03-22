@@ -1,13 +1,33 @@
-name: 서비
-birth_year: 1995
+name: 신준섭
+nickname: 서비
+birth_date: "1991년 6월 24일"
 location: 서울, 대한민국
-bio: |
-  안녕하세요! 저는 서비입니다. 풀스택 개발자이자 AI/ML에 관심이 많은 개발자예요.
-  새로운 기술을 배우고 창의적인 프로젝트를 만드는 것을 좋아합니다.
+job_title: 풀스택 개발자
+current_status: 재직 중
+
 contact:
-  github: https://github.com/seobi
-  email: seobi@example.com
-  blog: https://seobi.dev
+  github: https://github.com/Junseop-Shin/
+  linkedin: https://www.linkedin.com/in/준섭-신-24b5a8247/
+  email: nuclearbomb6518@gmail.com
+  portfolio: https://testproject-ba5ce.web.app/
+
 languages:
   - 한국어 (모국어)
   - 영어 (업무 가능)
+
+certifications:
+  - SQLP (SQL 전문가)
+  - AZ-104 (Microsoft Azure Administrator)
+
+bio: |
+  새로운 것을 탐구하고 배우는 것을 즐기는 풀스택 개발자입니다.
+  서울대 원자핵공학 전공 후 발전소 근무를 거쳐 개발자로 커리어를 전환했습니다.
+  새 환경 적응이 빠르고, 주체적으로 업무를 플래닝하며 일하는 스타일입니다.
+  AI 시대에도 살아남을 개발 역량을 갖추는 것과 사이드 프로젝트 수익화를 목표로 하고 있습니다.
+
+education:
+  - school: 서울대학교
+    major: 원자핵공학과
+    period: "2010.03 ~ 2016.08"
+    gpa: "3.2/4.3"
+    note: "졸업 후 대학원 연구실 인턴 1년 경험. 이후 개발자로 커리어 전환."

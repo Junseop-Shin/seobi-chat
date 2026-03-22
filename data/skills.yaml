@@ -1,24 +1,40 @@
-frontend:
-  - React
-  - Next.js
+# 숙련도 기준
+# strong: 자신 있게 사용 가능
+# familiar: 익숙하게 사용 가능
+# experienced: 경험 있음
+
+strong:
+  - JavaScript
   - TypeScript
-  - Three.js
-  - Tailwind CSS
-  - Vue.js
-backend:
-  - Node.js
-  - Python
-  - FastAPI
-  - Express
-  - PostgreSQL
-  - MongoDB
-ai_ml:
-  - Google Gemini API
-  - OpenAI API
-  - PyTorch (기초)
-  - Stable Diffusion
-devops:
+  - HTML / CSS
+  - React
+  - MobX
+  - Styled-Components
+  - Sass
+
+familiar:
+  - C++
+  - Jest
+  - Webpack
+  - Redux
+
+experienced:
+  - Java
+  - Spring
+  - Git / GitHub
   - Docker
-  - Cloudflare
+  - Next.js
+  - Tailwind CSS
+  - Framer Motion
+
+tools_and_infra:
   - PM2
-  - Git/GitHub
+  - Cloudflare Tunnel
+  - Azure (AZ-104 자격증 보유)
+  - Storybook
+  - Chromatic
+  - Playwright
+  - Vitest
+  - TanStack Table
+  - Recharts
+  - Radix UI

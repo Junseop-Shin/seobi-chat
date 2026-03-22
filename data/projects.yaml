@@ -1,16 +1,47 @@
 projects:
-  - name: seobi-chat
-    description: "Siri 스타일의 3D 구체 UI를 가진 개인 AI 챗봇"
-    tech: ["Next.js", "Three.js", "Gemini API"]
-    status: "개발 중"
-    url: ""
-  - name: 포트폴리오 사이트
-    description: "개인 포트폴리오 웹사이트"
-    tech: ["Next.js", "TypeScript", "Tailwind CSS"]
+  - name: 개인 포트폴리오 (profile)
+    description: "About, Career, Skill, Projects 섹션으로 구성된 개인 소개 페이지. 다크모드, 스크롤 애니메이션, 반응형 디자인, 커스텀 커서 포함."
+    tech: ["React", "TypeScript", "TailwindCSS", "Framer Motion"]
     status: "운영 중"
-    url: "https://seobi.dev"
-  - name: AI 이미지 생성기
-    description: "Stable Diffusion을 활용한 이미지 생성 도구"
-    tech: ["Python", "FastAPI", "React"]
+    period: "2025.04 ~ 현재"
+    url: "https://testproject-ba5ce.web.app/"
+    github: "https://github.com/Junseop-Shin/profile"
+
+  - name: StudioBOLD 포트폴리오 사이트 (boldgobynd)
+    description: "디자이너 포트폴리오 웹사이트. 태그 필터 이미지 갤러리, 인피니트 캐러셀, 전체화면 이미지 뷰어, 모바일 네비게이션 드로어, 이메일 문의 알림 기능 포함."
+    tech: ["React", "TypeScript", "Next.js", "Styled-Components", "Framer Motion"]
+    status: "운영 중"
+    period: "2025.03 ~ 2025.04"
+    url: "https://boldgobynd.vercel.app/"
+    github: "https://github.com/Junseop-Shin/boldgobynd"
+
+  - name: My UI Library (my-ui-lib)
+    description: "핀테크/금융 도메인 특화 디자인 시스템 라이브러리. Button, Input, DataTable, StockChart, PieChart 컴포넌트 포함. Storybook + Chromatic + Playwright로 테스트."
+    tech: ["React 19+", "TypeScript", "Tailwind CSS", "Radix UI", "TanStack Table", "Recharts", "Vitest", "Storybook"]
+    status: "개발 중"
+    period: "2025 ~"
+    url: ""
+    github: "https://github.com/Junseop-Shin/my-ui-lib"
+
+  - name: KIS Trader (kis-trader)
+    description: "한국투자증권 API를 활용한 자동 트레이딩 시스템."
+    tech: ["Python", "KIS API"]
+    status: "사이드 프로젝트"
+    period: "2025 ~"
+    url: ""
+    github: "https://github.com/Junseop-Shin/kis-trader"
+
+  - name: Seobi Chat (seobi-chat)
+    description: "Siri 스타일의 3D 은색 구체 UI를 가진 개인 AI 챗봇. 음성 입출력, Gemini API, 보안 레이어 포함."
+    tech: ["Next.js", "Three.js", "React Three Fiber", "Gemini API", "Web Speech API"]
+    status: "개발 중"
+    period: "2026 ~"
+    url: ""
+    github: "https://github.com/Junseop-Shin/seobi-chat"
+
+  - name: Lotto Oracle
+    description: "로또 관련 프로젝트."
+    tech: []
     status: "사이드 프로젝트"
     url: ""
+    github: "https://github.com/Junseop-Shin/lotto-oracle"
