@@ -38,6 +38,21 @@ jobs:
       3개월 내 배정된 이슈 180개 중 140개(78%) 해결.
       디자인 시스템 컴포넌트 구현: Color, Label, Icon, InputField, TextArea, Dropdown, Dialog, Modal.
 
+  - company: 티앤엠테크 (T&M Tech)
+    role: 풀스택 개발자
+    period: "2024.01 ~ 현재"
+    tech: ["React", "TypeScript", "Spring Boot", "PostgreSQL", "GitHub Actions"]
+    description: |
+      AI CCTV 및 하콘/센서 임베디드 통신 관련 플랫폼 서비스의 백엔드/프론트엔드 담당.
+      주 업무: 배치 처리, 외부 API 연동 (기상청, 카카오톡 알림톡, DR/해피콜 등 외부 업체 협업).
+      약 17,000개 게이트웨이의 5분 주기 데이터 수집·제어 서비스를 레거시에서 신규 플랫폼으로 이관.
+      MySQL → PostgreSQL 마이그레이션 포함, 사실상 레거시 전면 재구현 수준의 작업.
+      파일 직접 교체 방식의 배포를 GitHub Actions 기반 자동 무중단 배포로 전환.
+    notable_incident: |
+      구 파일교체 배포 방식으로 작업 중 SSL 인증서를 잘못 덮어써 1시간 서비스 장애 발생.
+      이 경험으로 CI/CD와 배포 전 백업의 중요성을 뼈저리게 체감.
+      이후 동일한 실수는 절대 반복하지 않겠다는 다짐을 갖게 됨.
+
 education:
   - school: 서울대학교
     major: 원자핵공학과
