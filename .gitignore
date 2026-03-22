@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# 미답변 질문 로그 — 서버에만 보관, GitHub에 올리지 않음
+/logs/
+
 # dependencies
 /node_modules
 /.pnp
