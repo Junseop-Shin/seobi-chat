@@ -1,18 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { buildPersonContext } from '@/lib/dataLoader';
 import { checkTopicGuard } from '@/lib/topicGuard';
 import { checkRateLimit } from '@/lib/rateLimit';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? '');
+// Fail-fast: API 키 없으면 서버 시작 시점에 에러 (런타임 에러 방지)
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error('GEMINI_API_KEY 환경변수가 설정되지 않았습니다. .env.local 파일을 확인하세요.');
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
+
+// Gemini 내장 안전 필터 설정
+// 유해 콘텐츠를 API 레벨에서 추가 차단
+const SAFETY_SETTINGS = [
+  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+];
 
 export type Emotion = 'neutral' | 'thinking' | 'speaking';
 
+// 신뢰할 수 있는 환경에서 IP 추출
+// Cloudflare Tunnel 사용 시 CF-Connecting-IP 헤더가 가장 신뢰도 높음
+function extractIp(req: NextRequest): string {
+  // Cloudflare Tunnel: 항상 실제 클라이언트 IP
+  const cfIp = req.headers.get('cf-connecting-ip');
+  if (cfIp) return cfIp;
+
+  // 일반 리버스 프록시: 첫 번째 항목이 클라이언트 IP (스푸핑 가능성 있음)
+  // Cloudflare Tunnel 없이 직접 노출 시 x-forwarded-for를 신뢰하지 않을 것
+  const forwarded = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  if (forwarded) return forwarded;
+
+  return '127.0.0.1';
+}
+
 export async function POST(req: NextRequest) {
-  // IP 주소 추출 (프록시 헤더 고려)
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    ?? req.headers.get('x-real-ip')
-    ?? '127.0.0.1';
+  const ip = extractIp(req);
 
   // 1단계: Rate limit 확인
   const rateLimitResult = checkRateLimit(ip);
@@ -74,6 +101,7 @@ ${personContext}
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.0-flash',
       systemInstruction,
+      safetySettings: SAFETY_SETTINGS,
     });
 
     const result = await model.generateContent({
@@ -83,6 +111,15 @@ ${personContext}
         temperature: 0.7,
       },
     });
+
+    // Gemini 안전 필터에 의해 응답이 차단된 경우 처리
+    const candidate = result.response.candidates?.[0];
+    if (!candidate || candidate.finishReason === 'SAFETY') {
+      return NextResponse.json(
+        { error: '해당 질문에는 답변하기 어렵습니다.' },
+        { status: 400 }
+      );
+    }
 
     const response = result.response.text();
 

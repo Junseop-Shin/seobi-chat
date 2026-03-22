@@ -159,7 +159,8 @@ function SphereInner({ state, audioLevel = 0 }: SphereProps) {
 
   return (
     <mesh ref={meshRef}>
-      <sphereGeometry args={[1.5, 128, 128]} />
+      {/* 64×64 세그먼트: 시각 품질 유지하면서 정점 수 4배 감소 (모바일 프레임드랍 방지) */}
+      <sphereGeometry args={[1.5, 64, 64]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}

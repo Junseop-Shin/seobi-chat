@@ -1,4 +1,8 @@
-// IP별 요청 횟수를 메모리에 저장 (서버 재시작 시 초기화)
+// ⚠️ 설계 전제: 단일 프로세스 단일 인스턴스 (PM2 instances: 1)
+// 이 구현은 Node.js 프로세스 메모리에 상태를 저장합니다.
+// 서버리스 / 다중 인스턴스 환경에서는 Redis/Upstash로 교체 필요.
+// seobi-chat은 Windows PC 단일 PM2 프로세스이므로 이 방식이 적합합니다.
+
 interface RateLimitEntry {
   hourlyCount: number;
   dailyCount: number;
@@ -8,8 +12,9 @@ interface RateLimitEntry {
 
 const store = new Map<string, RateLimitEntry>();
 
-const HOURLY_LIMIT = 30;  // 시간당 최대 요청 수
-const DAILY_LIMIT = 100;  // 일일 최대 요청 수
+// 환경변수로 한도 조정 가능 (기본값: 시간당 30, 일일 100)
+const HOURLY_LIMIT = Number(process.env.RATE_LIMIT_HOURLY ?? 30);
+const DAILY_LIMIT = Number(process.env.RATE_LIMIT_DAILY ?? 100);
 
 // IP 주소의 현재 요청 횟수를 확인하고 카운트 증가
 export interface RateLimitResult {
@@ -23,7 +28,7 @@ export function checkRateLimit(ip: string): RateLimitResult {
   const entry = store.get(ip) ?? {
     hourlyCount: 0,
     dailyCount: 0,
-    hourlyResetAt: now + 60 * 60 * 1000,   // 1시간 후 초기화
+    hourlyResetAt: now + 60 * 60 * 1000,    // 1시간 후 초기화
     dailyResetAt: now + 24 * 60 * 60 * 1000, // 24시간 후 초기화
   };
 

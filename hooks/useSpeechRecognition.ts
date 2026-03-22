@@ -21,6 +21,8 @@ export function useSpeechRecognition(
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  // MediaStream 트랙을 저장해 stopListening 시 명시적으로 종료 (마이크 인디케이터 버그 방지)
+  const streamRef = useRef<MediaStream | null>(null);
 
   // Web Speech API 지원 여부 확인
   const isSupported = typeof window !== 'undefined' &&
@@ -30,6 +32,8 @@ export function useSpeechRecognition(
   const startAudioAnalysis = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // 스트림 참조 저장 — stopListening 시 트랙을 명시적으로 종료해야 마이크 인디케이터가 꺼짐
+      streamRef.current = stream;
       audioContextRef.current = new AudioContext();
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 256;
@@ -79,6 +83,9 @@ export function useSpeechRecognition(
       setAudioLevel(0);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       if (audioContextRef.current) audioContextRef.current.close();
+      // MediaStream 트랙 명시적 종료 — 미종료 시 브라우저 마이크 인디케이터가 계속 표시됨
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
     };
 
     recognitionRef.current.start();
@@ -92,6 +99,9 @@ export function useSpeechRecognition(
     setAudioLevel(0);
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     if (audioContextRef.current) audioContextRef.current.close();
+    // MediaStream 트랙 명시적 종료 (onend가 호출되지 않는 경우 대비)
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
   }, []);
 
   return { isListening, transcript, audioLevel, startListening, stopListening, isSupported };
