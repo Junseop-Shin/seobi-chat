@@ -1,0 +1,64 @@
+name: Deploy to Home Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" | base64 -d > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+
+      - name: Sync build output
+        run: |
+          SSH="ssh -i ~/.ssh/id_deploy -p ${{ secrets.DEPLOY_PORT }} -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
+          $SSH "pm2 stop seobi-chat" || true
+          $SSH "if exist \"${{ secrets.SEOBI_DEPLOY_PATH }}\" rmdir /s /q \"${{ secrets.SEOBI_DEPLOY_PATH }}\"" || true
+          $SSH "mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\" && mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\.next\" && mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\.next\\static\" && mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\public\""
+          tar czf - -C .next/standalone . | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}"
+          tar czf - -C .next/static . | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}/.next/static"
+          tar czf - -C data . | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}/data"
+          tar czf - ecosystem.config.js | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}"
+
+      - name: Write .env.local on server
+        run: |
+          ssh -i ~/.ssh/id_deploy \
+            -p ${{ secrets.DEPLOY_PORT }} \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+            "echo GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} > \"${{ secrets.SEOBI_DEPLOY_PATH }}\\.env.local\" && echo NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }} >> \"${{ secrets.SEOBI_DEPLOY_PATH }}\\.env.local\""
+
+      - name: Reload pm2
+        run: |
+          ssh -i ~/.ssh/id_deploy \
+            -p ${{ secrets.DEPLOY_PORT }} \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+            "cd ${{ secrets.SEOBI_DEPLOY_PATH }} && pm2 reload seobi-chat --update-env || cd ${{ secrets.SEOBI_DEPLOY_PATH }} && pm2 start ecosystem.config.js && pm2 save && schtasks /run /tn PM2-Resurrect"
