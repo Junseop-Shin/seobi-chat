@@ -1,0 +1,18 @@
+jobs:
+  - company: 테크스타트업
+    role: 풀스택 개발자
+    period: "2022 - 현재"
+    tech: ["React", "Next.js", "Node.js", "PostgreSQL"]
+    description: |
+      웹 서비스 개발 및 유지보수를 담당하고 있습니다.
+      사용자 경험 개선과 성능 최적화에 집중하고 있어요.
+  - company: IT 에이전시
+    role: 프론트엔드 개발자
+    period: "2020 - 2022"
+    tech: ["Vue.js", "JavaScript", "CSS"]
+    description: |
+      다양한 클라이언트의 웹사이트를 개발했습니다.
+education:
+  - school: 서울 대학교
+    major: 컴퓨터공학
+    period: "2014 - 2018"

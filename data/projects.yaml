@@ -1,0 +1,16 @@
+projects:
+  - name: seobi-chat
+    description: "Siri 스타일의 3D 구체 UI를 가진 개인 AI 챗봇"
+    tech: ["Next.js", "Three.js", "Gemini API"]
+    status: "개발 중"
+    url: ""
+  - name: 포트폴리오 사이트
+    description: "개인 포트폴리오 웹사이트"
+    tech: ["Next.js", "TypeScript", "Tailwind CSS"]
+    status: "운영 중"
+    url: "https://seobi.dev"
+  - name: AI 이미지 생성기
+    description: "Stable Diffusion을 활용한 이미지 생성 도구"
+    tech: ["Python", "FastAPI", "React"]
+    status: "사이드 프로젝트"
+    url: ""

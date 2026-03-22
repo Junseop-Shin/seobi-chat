@@ -1,0 +1,13 @@
+name: 서비
+birth_year: 1995
+location: 서울, 대한민국
+bio: |
+  안녕하세요! 저는 서비입니다. 풀스택 개발자이자 AI/ML에 관심이 많은 개발자예요.
+  새로운 기술을 배우고 창의적인 프로젝트를 만드는 것을 좋아합니다.
+contact:
+  github: https://github.com/seobi
+  email: seobi@example.com
+  blog: https://seobi.dev
+languages:
+  - 한국어 (모국어)
+  - 영어 (업무 가능)

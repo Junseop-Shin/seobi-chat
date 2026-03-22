@@ -1,0 +1,24 @@
+frontend:
+  - React
+  - Next.js
+  - TypeScript
+  - Three.js
+  - Tailwind CSS
+  - Vue.js
+backend:
+  - Node.js
+  - Python
+  - FastAPI
+  - Express
+  - PostgreSQL
+  - MongoDB
+ai_ml:
+  - Google Gemini API
+  - OpenAI API
+  - PyTorch (기초)
+  - Stable Diffusion
+devops:
+  - Docker
+  - Cloudflare
+  - PM2
+  - Git/GitHub
