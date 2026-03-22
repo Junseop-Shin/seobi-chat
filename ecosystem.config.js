@@ -11,7 +11,7 @@ module.exports = {
       max_memory_restart: '500M',
       env: {
         NODE_ENV: 'production',
-        PORT: 8086, // 기존 사용 포트(3000/3001/6006/8084/8085) 충돌 방지
+        PORT: 3002, // profile=3000, lotto-oracle=3001 충돌 방지
       },
     },
   ],
