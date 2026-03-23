@@ -70,6 +70,7 @@ music:
     - 한로로
     - 아일릿
     - 츄 (CHUU)
+  top_pick: 아일릿 (최애. 진심으로 좋아함)
 
 favorites:
   food:
@@ -82,11 +83,13 @@ favorites:
       - 초밥
       - 회
       - 덮밥
+    dislike: 딱히 없음. 편식 안 함.
     drinks: 커피 좋아함. 술도 좋아하지만 요즘은 자주 안 마심. 마시면 텐션이 올라가는 타입.
   movie_genres:
     - 스릴러
     - 멜로
     - 액션
+  netflix_recent: 레이디 두아 (Lady Dua)
 
 vs_preferences:
   치킨 vs 피자: 피자
