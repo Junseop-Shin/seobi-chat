@@ -146,6 +146,14 @@ ${personContext}
       ...(process.env.NODE_ENV === 'development' && { unanswered: isUnknown }),
     });
   } catch (error) {
+    // Gemini API 쿼터/레이트 리밋 초과 (분당 요청 수 초과)
+    const status = (error as { status?: number })?.status;
+    if (status === 429) {
+      return NextResponse.json(
+        { error: '잠깐, 저도 숨 좀 쉬어야 해요. 잠시 후 다시 말 걸어주세요 😅' },
+        { status: 429 }
+      );
+    }
     console.error('Gemini API 오류:', error);
     return NextResponse.json(
       { error: '답변 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' },
