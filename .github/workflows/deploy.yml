@@ -61,4 +61,4 @@ jobs:
             -p ${{ secrets.DEPLOY_PORT }} \
             -o StrictHostKeyChecking=no \
             ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-            "cd ${{ secrets.SEOBI_DEPLOY_PATH }} && pm2 reload seobi-chat --update-env || cd ${{ secrets.SEOBI_DEPLOY_PATH }} && pm2 start ecosystem.config.js && pm2 save && schtasks /run /tn PM2-Resurrect"
+            "cd ${{ secrets.SEOBI_DEPLOY_PATH }} && pm2 delete seobi-chat & pm2 start ecosystem.config.js && pm2 save && schtasks /run /tn PM2-Resurrect"

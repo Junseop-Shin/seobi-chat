@@ -113,26 +113,37 @@ const fragmentShader = `
     vec3 light4 = normalize(vec3(1.5, -cos(t * 0.5) * 2.0, sin(t * 0.5) * 2.0));
 
     float sharpness = 180.0;
-    float spec = 0.0;
-    spec += pow(max(dot(reflect(-light1, tileN), viewDir), 0.0), sharpness) * 4.0;
-    spec += pow(max(dot(reflect(-light2, tileN), viewDir), 0.0), sharpness) * 3.0;
-    spec += pow(max(dot(reflect(-light3, tileN), viewDir), 0.0), sharpness) * 2.5;
-    spec += pow(max(dot(reflect(-light4, tileN), viewDir), 0.0), sharpness) * 2.0;
+    // 각 광원마다 다른 색상 → 컬러풀한 빛 점
+    vec3 spec = vec3(0.0);
+    spec += pow(max(dot(reflect(-light1, tileN), viewDir), 0.0), sharpness) * vec3(1.0, 0.90, 0.80) * 4.0;
+    spec += pow(max(dot(reflect(-light2, tileN), viewDir), 0.0), sharpness) * vec3(0.7, 0.85, 1.0)  * 3.0;
+    spec += pow(max(dot(reflect(-light3, tileN), viewDir), 0.0), sharpness) * vec3(0.9, 1.0,  0.75) * 2.5;
+    spec += pow(max(dot(reflect(-light4, tileN), viewDir), 0.0), sharpness) * vec3(1.0, 0.7,  0.9)  * 2.0;
 
-    // ── 기본 색상 ──────────────────────────────────────────
-    vec3 darkBase  = vec3(0.04, 0.04, 0.06); // 거울 사이 어두운 틈
-    vec3 mirrorBase = vec3(0.55, 0.60, 0.65); // 거울 타일 기본 반사
+    // ── 타일 고유 색상 (노멀 방향으로 HSV 색조 부여) ──────
+    // atan2(z, x) → 수평 색조, tileN.y → 명도 변화
+    float hue = atan(tileN.z, tileN.x) / 6.28318 + 0.5; // 0~1
+    vec3 tileHue = vec3(
+      sin(hue * 6.28318 + 0.0)   * 0.18 + 0.52,
+      sin(hue * 6.28318 + 2.094) * 0.15 + 0.55,
+      sin(hue * 6.28318 + 4.189) * 0.18 + 0.58
+    );
+    // 상하 방향으로 밝기 변화 (위=밝, 아래=어둠)
+    tileHue += tileN.y * 0.08;
+
+    vec3 darkBase   = vec3(0.03, 0.03, 0.04); // 거울 사이 어두운 틈
+    vec3 mirrorBase = tileHue;                 // 컬러 타일
 
     // Fresnel: 가장자리는 약간 밝게
     float fresnel = pow(1.0 - max(dot(n, viewDir), 0.0), 2.5);
-    mirrorBase += fresnel * 0.15;
+    mirrorBase += fresnel * 0.12;
 
     vec3 color = mix(mirrorBase, darkBase, isEdge);
 
     // ── 스펙큘러 합성 ──────────────────────────────────────
     // 타일 위에만 스펙큘러 적용 (경계선은 어두움)
     float mirrorMask = 1.0 - isEdge;
-    color += vec3(spec) * mirrorMask;
+    color += spec * mirrorMask;
 
     // ── 상태별 컬러 변조 ───────────────────────────────────
     if (uState == 1.0) {

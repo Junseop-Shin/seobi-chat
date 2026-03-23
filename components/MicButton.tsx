@@ -9,6 +9,7 @@ interface MicButtonProps {
 export default function MicButton({ isListening, onToggle, disabled }: MicButtonProps) {
   return (
     <button
+      type="button"
       onClick={onToggle}
       disabled={disabled}
       aria-label={isListening ? '마이크 끄기' : '마이크 켜기'}
