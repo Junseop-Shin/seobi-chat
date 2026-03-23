@@ -64,8 +64,8 @@ jobs:
         run: |
           SSH="ssh -i ~/.ssh/id_deploy -p ${{ secrets.DEPLOY_PORT }} -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
           $SSH "pm2 stop seobi-chat" || true
-          $SSH "if exist \"${{ secrets.SEOBI_DEPLOY_PATH }}\" rmdir /s /q \"${{ secrets.SEOBI_DEPLOY_PATH }}\"" || true
-          $SSH "mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\" && mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\.next\" && mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\.next\\static\" && mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\public\" && mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\data\""
+          # 디렉토리 없으면 생성 (2>nul: 이미 있어도 오류 무시)
+          $SSH "mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\" 2>nul & mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\.next\" 2>nul & mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\.next\\static\" 2>nul & mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\public\" 2>nul & mkdir \"${{ secrets.SEOBI_DEPLOY_PATH }}\\data\" 2>nul & echo dirs ready"
           tar czf - -C .next/standalone . | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}"
           tar czf - -C .next/static . | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}/.next/static"
           tar czf - -C data . | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}/data"
