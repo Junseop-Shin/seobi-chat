@@ -2,8 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'seobi-chat',
-      script: 'node_modules/.bin/next',
-      args: 'start',
+      script: 'server.js',
       cwd: './',
       instances: 1,
       autorestart: true,        // 크래시 시 자동 재시작
