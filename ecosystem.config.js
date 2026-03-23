@@ -3,6 +3,9 @@ module.exports = {
     {
       name: 'seobi-chat',
       script: 'server.js',
+      // Node 20+의 --env-file 플래그로 .env.local 로드
+      // (Next.js standalone은 .env.local을 자동 로드하지 않음)
+      interpreter_args: '--env-file=.env.local',
       cwd: './',
       instances: 1,
       autorestart: true,        // 크래시 시 자동 재시작

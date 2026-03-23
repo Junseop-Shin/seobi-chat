@@ -13,7 +13,7 @@ export default function MicButton({ isListening, onToggle, disabled }: MicButton
       disabled={disabled}
       aria-label={isListening ? '마이크 끄기' : '마이크 켜기'}
       className={`
-        fixed bottom-8 right-8 w-14 h-14 rounded-full
+        w-12 h-12 rounded-full
         flex items-center justify-center
         transition-all duration-300
         ${isListening
