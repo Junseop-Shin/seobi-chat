@@ -11,17 +11,17 @@ interface SphereProps {
   audioLevel?: number; // 0-1, 마이크 음량
 }
 
-// 커스텀 쉐이더 - Siri 스타일의 노이즈 파동 구체
+// 미러볼 스타일 셰이더 — 노멀을 타일로 양자화해 작은 거울 조각을 시뮬레이션
 const vertexShader = `
   uniform float uTime;
   uniform float uNoiseStrength;
-  uniform float uState; // 0=idle, 1=listening, 2=thinking, 3=speaking
+  uniform float uState;
 
   varying vec3 vNormal;
   varying vec3 vPosition;
-  varying float vNoise;
+  varying vec3 vWorldPosition;
 
-  // 3D 심플렉스 노이즈 근사 함수
+  // 심플렉스 노이즈 (미세한 표면 진동용)
   vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 permute(vec4 x) { return mod289(((x*34.0)+10.0)*x); }
@@ -71,13 +71,13 @@ const vertexShader = `
   }
 
   void main() {
-    vNormal = normal;
-    vPosition = position;
+    vNormal = normalize(normalMatrix * normal);
+    vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
+    vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
 
-    float speed = uState == 0.0 ? 0.3 : uState == 1.0 ? 1.5 : uState == 2.0 ? 0.8 : 2.0;
-    float noise = snoise(position * 2.0 + uTime * speed);
-    vNoise = noise;
-
+    // 아주 미세한 진동 (미러볼은 기본적으로 매끄러워야 함)
+    float speed = uState == 1.0 ? 2.0 : uState == 3.0 ? 2.5 : 0.4;
+    float noise = snoise(position * 3.0 + uTime * speed);
     vec3 newPosition = position + normal * noise * uNoiseStrength;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
   }
@@ -85,32 +85,73 @@ const vertexShader = `
 
 const fragmentShader = `
   uniform float uTime;
-  uniform float uState; // 0=idle, 1=listening, 2=thinking, 3=speaking
+  uniform float uState;
 
   varying vec3 vNormal;
   varying vec3 vPosition;
-  varying float vNoise;
+  varying vec3 vWorldPosition;
 
   void main() {
-    // 기본 은색 팔레트
-    vec3 silverBase = vec3(0.85, 0.87, 0.90);
-    vec3 silverHighlight = vec3(0.95, 0.97, 1.0);
-    vec3 thinkingColor = vec3(0.5, 0.7, 1.0); // 파란빛 (thinking 상태)
+    vec3 n = normalize(vNormal);
+    vec3 viewDir = normalize(-vPosition);
 
-    // 노이즈 기반 shimmer 효과
-    float shimmer = smoothstep(-0.3, 0.5, vNoise);
-    vec3 color = mix(silverBase, silverHighlight, shimmer);
+    // ── 미러 타일 ──────────────────────────────────────────
+    // 노멀 벡터를 격자로 양자화 → 각 타일이 독립적인 평면 거울처럼 동작
+    float tiles = 9.0;
+    vec3 tileN = normalize(floor(n * tiles + 0.5) / tiles);
 
-    // thinking 상태: 은색 → 파란빛으로 pulse
-    if (uState == 2.0) {
-      float pulse = sin(uTime * 3.0) * 0.5 + 0.5;
-      color = mix(color, thinkingColor, pulse * 0.5);
+    // 타일 경계선: 양자화된 노멀과 원래 노멀의 차이로 가장자리 감지
+    float edgeDist = length(n - tileN);
+    float isEdge = smoothstep(0.08, 0.14, edgeDist);
+
+    // ── 다중 광원 스펙큘러 (디스코볼 빛 점들) ─────────────
+    // 회전하는 가상의 조명들 → 시간에 따라 빛 점이 이동
+    float t = uTime * 0.4;
+    vec3 light1 = normalize(vec3(cos(t) * 2.0, 2.5, sin(t) * 2.0));
+    vec3 light2 = normalize(vec3(-cos(t * 0.7) * 2.5, 1.5, sin(t * 0.7) * 1.5));
+    vec3 light3 = normalize(vec3(sin(t * 1.3) * 1.5, -1.5, cos(t * 1.3) * 2.5));
+    vec3 light4 = normalize(vec3(1.5, -cos(t * 0.5) * 2.0, sin(t * 0.5) * 2.0));
+
+    float sharpness = 180.0;
+    float spec = 0.0;
+    spec += pow(max(dot(reflect(-light1, tileN), viewDir), 0.0), sharpness) * 4.0;
+    spec += pow(max(dot(reflect(-light2, tileN), viewDir), 0.0), sharpness) * 3.0;
+    spec += pow(max(dot(reflect(-light3, tileN), viewDir), 0.0), sharpness) * 2.5;
+    spec += pow(max(dot(reflect(-light4, tileN), viewDir), 0.0), sharpness) * 2.0;
+
+    // ── 기본 색상 ──────────────────────────────────────────
+    vec3 darkBase  = vec3(0.04, 0.04, 0.06); // 거울 사이 어두운 틈
+    vec3 mirrorBase = vec3(0.55, 0.60, 0.65); // 거울 타일 기본 반사
+
+    // Fresnel: 가장자리는 약간 밝게
+    float fresnel = pow(1.0 - max(dot(n, viewDir), 0.0), 2.5);
+    mirrorBase += fresnel * 0.15;
+
+    vec3 color = mix(mirrorBase, darkBase, isEdge);
+
+    // ── 스펙큘러 합성 ──────────────────────────────────────
+    // 타일 위에만 스펙큘러 적용 (경계선은 어두움)
+    float mirrorMask = 1.0 - isEdge;
+    color += vec3(spec) * mirrorMask;
+
+    // ── 상태별 컬러 변조 ───────────────────────────────────
+    if (uState == 1.0) {
+      // listening: 파란빛 틴트
+      color = mix(color, color + vec3(0.0, 0.05, 0.15), 0.6);
+    } else if (uState == 2.0) {
+      // thinking: 은은한 골드 펄스
+      float pulse = sin(uTime * 4.0) * 0.5 + 0.5;
+      color = mix(color, color + vec3(0.15, 0.10, 0.0), pulse * 0.4);
+    } else if (uState == 3.0) {
+      // speaking: 무지개빛 iridescence
+      float wave = sin(uTime * 6.0 + vWorldPosition.y * 4.0) * 0.5 + 0.5;
+      vec3 rainbow = vec3(
+        sin(wave * 3.14159) * 0.3,
+        sin(wave * 3.14159 + 2.094) * 0.2,
+        sin(wave * 3.14159 + 4.189) * 0.3
+      );
+      color += rainbow * mirrorMask * 0.5;
     }
-
-    // fresnel 효과로 가장자리 살짝 어둡게
-    vec3 viewDir = normalize(cameraPosition - vPosition);
-    float fresnel = pow(1.0 - dot(vNormal, viewDir), 2.0);
-    color = mix(color, vec3(0.6, 0.65, 0.7), fresnel * 0.3);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -119,26 +160,23 @@ const fragmentShader = `
 function SphereInner({ state, audioLevel = 0 }: SphereProps) {
   const meshRef = useRef<THREE.Mesh>(null);
 
-  // 상태별 노이즈 강도 설정
+  // 미러볼은 기본적으로 매끄러워야 하므로 noise strength 대폭 축소
   const noiseStrengthByState: Record<SphereState, number> = {
-    idle: 0.03,
-    listening: 0.08 + audioLevel * 0.15,
-    thinking: 0.06,
-    speaking: 0.10,
+    idle:      0.004,
+    listening: 0.006 + audioLevel * 0.012,
+    thinking:  0.005,
+    speaking:  0.008,
   };
 
   const stateIndex: Record<SphereState, number> = {
-    idle: 0,
-    listening: 1,
-    thinking: 2,
-    speaking: 3,
+    idle: 0, listening: 1, thinking: 2, speaking: 3,
   };
 
   const uniforms = useMemo(
     () => ({
-      uTime: { value: 0 },
-      uNoiseStrength: { value: noiseStrengthByState[state] },
-      uState: { value: stateIndex[state] },
+      uTime:          { value: 0 },
+      uNoiseStrength: { value: noiseStrengthByState.idle },
+      uState:         { value: 0 },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
@@ -151,16 +189,14 @@ function SphereInner({ state, audioLevel = 0 }: SphereProps) {
     material.uniforms.uNoiseStrength.value = noiseStrengthByState[state];
     material.uniforms.uState.value = stateIndex[state];
 
-    // idle: 천천히 회전
-    if (state === 'idle') {
-      meshRef.current.rotation.y = clock.getElapsedTime() * 0.15;
-    }
+    // 항상 천천히 회전 (미러볼처럼)
+    meshRef.current.rotation.y = clock.getElapsedTime() * 0.2;
+    meshRef.current.rotation.x = Math.sin(clock.getElapsedTime() * 0.1) * 0.05;
   });
 
   return (
     <mesh ref={meshRef}>
-      {/* 64×64 세그먼트: 시각 품질 유지하면서 정점 수 4배 감소 (모바일 프레임드랍 방지) */}
-      <sphereGeometry args={[1.5, 64, 64]} />
+      <sphereGeometry args={[0.75, 128, 128]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
@@ -172,10 +208,11 @@ function SphereInner({ state, audioLevel = 0 }: SphereProps) {
 
 export default function Sphere({ state, audioLevel }: SphereProps) {
   return (
-    <Canvas camera={{ position: [0, 0, 4], fov: 45 }}>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[5, 5, 5]} intensity={1} />
-      <pointLight position={[-5, -5, 5]} intensity={0.5} color="#aaccff" />
+    <Canvas camera={{ position: [0, 0, 3], fov: 40 }}>
+      <ambientLight intensity={0.1} />
+      <pointLight position={[3, 4, 3]}  intensity={2}   color="#ffffff" />
+      <pointLight position={[-4, 2, 2]} intensity={1.5} color="#c0d8ff" />
+      <pointLight position={[0, -3, 4]} intensity={1}   color="#ffd0c0" />
       <SphereInner state={state} audioLevel={audioLevel} />
     </Canvas>
   );
