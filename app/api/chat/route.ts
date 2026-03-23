@@ -5,6 +5,22 @@ import { checkTopicGuard } from '@/lib/topicGuard';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { logUnansweredQuestion } from '@/lib/questionLogger';
 
+const INGESTOR_URL = process.env.NEXT_PUBLIC_INGESTOR_URL;
+
+function trackChatEvent(ip: string, unanswered: boolean) {
+  if (!INGESTOR_URL) return;
+  fetch(`${INGESTOR_URL}/v1/events`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      event_type: 'chat_message',
+      service_id: 'seobi-chat',
+      metadata: { unanswered },
+      ip_address: ip,
+    }),
+  }).catch(() => {});
+}
+
 // genAI는 요청 시점에 초기화 (빌드 타임에 API 키 없어도 빌드 성공하도록)
 function getGenAI(): GoogleGenerativeAI {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -143,6 +159,8 @@ ${personContext}
         geminiResponse: response,
       });
     }
+
+    trackChatEvent(ip, isUnknown);
 
     return NextResponse.json({
       response,
