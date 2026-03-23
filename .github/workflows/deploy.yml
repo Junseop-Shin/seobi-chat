@@ -71,10 +71,10 @@ jobs:
           tar czf - -C data . | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}/data"
           tar czf - ecosystem.config.js | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}"
 
-      - name: Start pm2
+      - name: Reload pm2
         run: |
           ssh -i ~/.ssh/id_deploy \
             -p ${{ secrets.DEPLOY_PORT }} \
             -o StrictHostKeyChecking=no \
             ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-            "cd ${{ secrets.SEOBI_DEPLOY_PATH }} && pm2 start ecosystem.config.js && pm2 save && schtasks /run /tn PM2-Resurrect"
+            "cd ${{ secrets.SEOBI_DEPLOY_PATH }} && pm2 startOrReload ecosystem.config.js --update-env && pm2 save"
