@@ -30,6 +30,30 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
 
+      - name: Generate ecosystem.config.js with env vars
+        run: |
+          cat > ecosystem.config.js << 'ECOSYSTEM_EOF'
+          module.exports = {
+            apps: [{
+              name: 'seobi-chat',
+              script: 'server.js',
+              cwd: '.',
+              instances: 1,
+              autorestart: true,
+              watch: false,
+              max_memory_restart: '500M',
+              env: {
+                NODE_ENV: 'production',
+                PORT: 3002,
+                GEMINI_API_KEY: 'GEMINI_KEY_PLACEHOLDER',
+                NEXT_PUBLIC_BASE_URL: 'BASE_URL_PLACEHOLDER'
+              }
+            }]
+          };
+          ECOSYSTEM_EOF
+          sed -i "s|GEMINI_KEY_PLACEHOLDER|${{ secrets.GEMINI_API_KEY }}|g" ecosystem.config.js
+          sed -i "s|BASE_URL_PLACEHOLDER|${{ secrets.NEXT_PUBLIC_BASE_URL }}|g" ecosystem.config.js
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
@@ -47,18 +71,10 @@ jobs:
           tar czf - -C data . | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}/data"
           tar czf - ecosystem.config.js | $SSH "tar xzf - -C ${{ secrets.SEOBI_DEPLOY_PATH }}"
 
-      - name: Write .env.local on server
+      - name: Start pm2
         run: |
           ssh -i ~/.ssh/id_deploy \
             -p ${{ secrets.DEPLOY_PORT }} \
             -o StrictHostKeyChecking=no \
             ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-            "echo GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} > \"${{ secrets.SEOBI_DEPLOY_PATH }}\\.env.local\" && echo NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }} >> \"${{ secrets.SEOBI_DEPLOY_PATH }}\\.env.local\""
-
-      - name: Reload pm2
-        run: |
-          ssh -i ~/.ssh/id_deploy \
-            -p ${{ secrets.DEPLOY_PORT }} \
-            -o StrictHostKeyChecking=no \
-            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-            "cd ${{ secrets.SEOBI_DEPLOY_PATH }} && pm2 delete seobi-chat & pm2 start ecosystem.config.js && pm2 save && schtasks /run /tn PM2-Resurrect"
+            "cd ${{ secrets.SEOBI_DEPLOY_PATH }} && pm2 start ecosystem.config.js && pm2 save && schtasks /run /tn PM2-Resurrect"
