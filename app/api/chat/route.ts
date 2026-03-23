@@ -5,13 +5,14 @@ import { checkTopicGuard } from '@/lib/topicGuard';
 import { checkRateLimit } from '@/lib/rateLimit';
 import { logUnansweredQuestion } from '@/lib/questionLogger';
 
-// Fail-fast: API 키 없으면 서버 시작 시점에 에러 (런타임 에러 방지)
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  throw new Error('GEMINI_API_KEY 환경변수가 설정되지 않았습니다. .env.local 파일을 확인하세요.');
+// genAI는 요청 시점에 초기화 (빌드 타임에 API 키 없어도 빌드 성공하도록)
+function getGenAI(): GoogleGenerativeAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY 환경변수가 설정되지 않았습니다. .env.local 파일을 확인하세요.');
+  }
+  return new GoogleGenerativeAI(apiKey);
 }
-
-const genAI = new GoogleGenerativeAI(apiKey);
 
 // Gemini 내장 안전 필터 설정
 const SAFETY_SETTINGS = [
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest) {
 
   // 4단계: Gemini API 호출
   try {
+    const genAI = getGenAI();
     const personContext = buildPersonContext();
 
     const systemInstruction = `
