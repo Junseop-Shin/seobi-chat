@@ -21,8 +21,10 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [inputText, setInputText] = useState('');
   const [hasStarted, setHasStarted] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const voiceEnabledRef = useRef(false);
   const { speak, stop: stopTTS } = useTTS();
 
   useEffect(() => {
@@ -30,6 +32,13 @@ export default function Home() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading, hasStarted]);
+
+  const handleVoiceToggle = useCallback(() => {
+    const next = !voiceEnabledRef.current;
+    voiceEnabledRef.current = next;
+    setVoiceEnabled(next);
+    if (!next) stopTTS();
+  }, [stopTTS]);
 
   const sendMessage = useCallback(async (message: string) => {
     if (!message.trim() || isLoading) return;
@@ -57,8 +66,13 @@ export default function Home() {
       }
 
       setMessages((prev) => [...prev, { role: 'bot', content: data.response }]);
-      setSphereState('speaking');
-      speak(data.response, () => setSphereState('speaking'), () => setSphereState('idle'));
+
+      if (voiceEnabledRef.current) {
+        setSphereState('speaking');
+        speak(data.response, () => setSphereState('speaking'), () => setSphereState('idle'));
+      } else {
+        setSphereState('idle');
+      }
     } catch {
       setError('네트워크 오류가 발생했습니다.');
       setSphereState('idle');
@@ -67,18 +81,49 @@ export default function Home() {
     }
   }, [isLoading, speak, stopTTS]);
 
+  // 음성 입력 완료 시: 자동으로 음성 답변 ON
+  const handleVoiceMessage = useCallback((message: string) => {
+    voiceEnabledRef.current = true;
+    setVoiceEnabled(true);
+    sendMessage(message);
+  }, [sendMessage]);
+
   const { isListening, transcript, audioLevel, startListening, stopListening, isSupported } =
-    useSpeechRecognition(sendMessage);
+    useSpeechRecognition(handleVoiceMessage);
 
   const handleMicToggle = useCallback(() => {
     if (isListening) { stopListening(); setSphereState('idle'); }
     else { setSphereState('listening'); startListening(); }
   }, [isListening, startListening, stopListening]);
 
+  // 텍스트 입력 시: 자동으로 음성 답변 OFF
   const handleTextSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    if (inputText.trim()) { sendMessage(inputText.trim()); setInputText(''); }
+    if (inputText.trim()) {
+      voiceEnabledRef.current = false;
+      setVoiceEnabled(false);
+      sendMessage(inputText.trim());
+      setInputText('');
+    }
   }, [inputText, sendMessage]);
+
+  // 음성 답변 토글 버튼
+  const VoiceToggle = (
+    <button
+      type="button"
+      onClick={handleVoiceToggle}
+      title={voiceEnabled ? '음성 답변 끄기' : '음성 답변 켜기'}
+      className={`
+        border px-3 py-3 rounded-full text-base transition-all duration-200 leading-none
+        ${voiceEnabled
+          ? 'bg-white/20 border-white/30 text-white'
+          : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/70'
+        }
+      `}
+    >
+      {voiceEnabled ? '🔊' : '🔇'}
+    </button>
+  );
 
   // 공통 입력 폼
   const InputForm = (
@@ -97,6 +142,7 @@ export default function Home() {
           transition-all duration-200 disabled:opacity-50
         "
       />
+      {VoiceToggle}
       {isSupported && (
         <MicButton isListening={isListening} onToggle={handleMicToggle} disabled={isLoading} />
       )}

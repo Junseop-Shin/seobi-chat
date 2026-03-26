@@ -105,12 +105,12 @@ const fragmentShader = `
     float isEdge = smoothstep(0.08, 0.14, edgeDist);
 
     // ── 다중 광원 스펙큘러 (디스코볼 빛 점들) ─────────────
-    // 회전하는 가상의 조명들 → 시간에 따라 빛 점이 이동
-    float t = uTime * 0.4;
-    vec3 light1 = normalize(vec3(cos(t) * 2.0, 2.5, sin(t) * 2.0));
-    vec3 light2 = normalize(vec3(-cos(t * 0.7) * 2.5, 1.5, sin(t * 0.7) * 1.5));
-    vec3 light3 = normalize(vec3(sin(t * 1.3) * 1.5, -1.5, cos(t * 1.3) * 2.5));
-    vec3 light4 = normalize(vec3(1.5, -cos(t * 0.5) * 2.0, sin(t * 0.5) * 2.0));
+    // 4개 광원이 같은 속도로 균일하게 회전 → 천천히 돌아가는 느낌
+    float t = uTime * 0.12;
+    vec3 light1 = normalize(vec3(cos(t)          * 2.0,  2.5, sin(t)          * 2.0));
+    vec3 light2 = normalize(vec3(cos(t + 1.5708) * 2.0,  1.0, sin(t + 1.5708) * 2.0));
+    vec3 light3 = normalize(vec3(cos(t + 3.1416) * 2.0, -1.0, sin(t + 3.1416) * 2.0));
+    vec3 light4 = normalize(vec3(cos(t + 4.7124) * 2.0, -2.5, sin(t + 4.7124) * 2.0));
 
     float sharpness = 180.0;
     // 각 광원마다 다른 색상 → 컬러풀한 빛 점
