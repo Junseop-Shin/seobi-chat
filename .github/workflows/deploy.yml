@@ -48,13 +48,15 @@ jobs:
                 NODE_ENV: 'production',
                 PORT: 3002,
                 GEMINI_API_KEY: 'GEMINI_KEY_PLACEHOLDER',
-                NEXT_PUBLIC_BASE_URL: 'BASE_URL_PLACEHOLDER'
+                NEXT_PUBLIC_BASE_URL: 'BASE_URL_PLACEHOLDER',
+                NEXT_PUBLIC_INGESTOR_URL: 'INGESTOR_URL_PLACEHOLDER'
               }
             }]
           };
           ECOSYSTEM_EOF
           sed -i "s|GEMINI_KEY_PLACEHOLDER|${{ secrets.GEMINI_API_KEY }}|g" ecosystem.config.js
           sed -i "s|BASE_URL_PLACEHOLDER|${{ secrets.NEXT_PUBLIC_BASE_URL }}|g" ecosystem.config.js
+          sed -i "s|INGESTOR_URL_PLACEHOLDER|${{ secrets.NEXT_PUBLIC_INGESTOR_URL }}|g" ecosystem.config.js
 
       - name: Setup SSH key
         run: |
