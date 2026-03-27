@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import MicButton from '@/components/MicButton';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useTTS } from '@/hooks/useTTS';
+import { trackEvent } from '@/lib/analytics';
 import type { SphereState } from '@/components/Sphere';
 
 const Sphere = dynamic(() => import('@/components/Sphere'), { ssr: false });
@@ -85,13 +86,14 @@ export default function Home() {
   const handleVoiceMessage = useCallback((message: string) => {
     voiceEnabledRef.current = true;
     setVoiceEnabled(true);
+    trackEvent('voice_input');
     sendMessage(message);
   }, [sendMessage]);
 
   const { isListening, transcript, audioLevel, startListening, stopListening, isSupported } =
     useSpeechRecognition(
       handleVoiceMessage,
-      useCallback(() => setSphereState('idle'), []),  // 발화 없이 종료 시 idle 복귀
+      useCallback(() => { setSphereState('idle'); trackEvent('no_speech'); }, []),
     );
 
   const handleMicToggle = useCallback(() => {
@@ -99,12 +101,9 @@ export default function Home() {
     else { setSphereState('listening'); startListening(); }
   }, [isListening, startListening, stopListening]);
 
-  // 텍스트 입력 시: 자동으로 음성 답변 OFF
   const handleTextSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (inputText.trim()) {
-      voiceEnabledRef.current = false;
-      setVoiceEnabled(false);
       sendMessage(inputText.trim());
       setInputText('');
     }
