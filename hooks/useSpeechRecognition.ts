@@ -12,7 +12,8 @@ interface UseSpeechRecognitionReturn {
 }
 
 export function useSpeechRecognition(
-  onResult: (text: string) => void
+  onResult: (text: string) => void,
+  onNoResult?: () => void,  // 발화 없이 인식 종료 시 호출
 ): UseSpeechRecognitionReturn {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -23,6 +24,8 @@ export function useSpeechRecognition(
   const animFrameRef = useRef<number | null>(null);
   // MediaStream 트랙을 저장해 stopListening 시 명시적으로 종료 (마이크 인디케이터 버그 방지)
   const streamRef = useRef<MediaStream | null>(null);
+  const hasResultRef = useRef(false);
+  const noSpeechTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Web Speech API 지원 여부 — SSR/hydration mismatch 방지를 위해 useEffect에서 감지
   const [isSupported, setIsSupported] = useState(false);
@@ -61,6 +64,8 @@ export function useSpeechRecognition(
   const startListening = useCallback(() => {
     if (!isSupported) return;
 
+    hasResultRef.current = false;
+
     const SpeechRecognitionAPI =
       window.SpeechRecognition || (window as Window & { webkitSpeechRecognition: typeof SpeechRecognition }).webkitSpeechRecognition;
 
@@ -69,18 +74,34 @@ export function useSpeechRecognition(
     recognitionRef.current.continuous = false;
     recognitionRef.current.interimResults = true;
 
+    // 5초 내 발화 없으면 자동 종료
+    noSpeechTimerRef.current = setTimeout(() => {
+      recognitionRef.current?.stop();
+    }, 5000);
+
     recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+      // 발화 감지 시 타이머 취소
+      if (noSpeechTimerRef.current) {
+        clearTimeout(noSpeechTimerRef.current);
+        noSpeechTimerRef.current = null;
+      }
+
       const last = event.results[event.results.length - 1];
       const text = last[0].transcript;
       setTranscript(text);
 
       if (last.isFinal) {
+        hasResultRef.current = true;
         onResult(text);
         setTranscript('');
       }
     };
 
     recognitionRef.current.onend = () => {
+      if (noSpeechTimerRef.current) {
+        clearTimeout(noSpeechTimerRef.current);
+        noSpeechTimerRef.current = null;
+      }
       setIsListening(false);
       setAudioLevel(0);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
@@ -88,14 +109,20 @@ export function useSpeechRecognition(
       // MediaStream 트랙 명시적 종료 — 미종료 시 브라우저 마이크 인디케이터가 계속 표시됨
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
+      // 발화 없이 종료 시 콜백 (구체 idle 복귀 등 처리)
+      if (!hasResultRef.current) onNoResult?.();
     };
 
     recognitionRef.current.start();
     setIsListening(true);
     startAudioAnalysis();
-  }, [isSupported, onResult, startAudioAnalysis]);
+  }, [isSupported, onResult, onNoResult, startAudioAnalysis]);
 
   const stopListening = useCallback(() => {
+    if (noSpeechTimerRef.current) {
+      clearTimeout(noSpeechTimerRef.current);
+      noSpeechTimerRef.current = null;
+    }
     recognitionRef.current?.stop();
     setIsListening(false);
     setAudioLevel(0);
