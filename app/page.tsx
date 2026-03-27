@@ -89,7 +89,10 @@ export default function Home() {
   }, [sendMessage]);
 
   const { isListening, transcript, audioLevel, startListening, stopListening, isSupported } =
-    useSpeechRecognition(handleVoiceMessage);
+    useSpeechRecognition(
+      handleVoiceMessage,
+      useCallback(() => setSphereState('idle'), []),  // 발화 없이 종료 시 idle 복귀
+    );
 
   const handleMicToggle = useCallback(() => {
     if (isListening) { stopListening(); setSphereState('idle'); }
