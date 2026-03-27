@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 interface UseSpeechRecognitionReturn {
   isListening: boolean;
@@ -24,9 +24,11 @@ export function useSpeechRecognition(
   // MediaStream 트랙을 저장해 stopListening 시 명시적으로 종료 (마이크 인디케이터 버그 방지)
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Web Speech API 지원 여부 확인
-  const isSupported = typeof window !== 'undefined' &&
-    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  // Web Speech API 지원 여부 — SSR/hydration mismatch 방지를 위해 useEffect에서 감지
+  const [isSupported, setIsSupported] = useState(false);
+  useEffect(() => {
+    setIsSupported('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+  }, []);
 
   // 마이크 음량 측정 (구체 애니메이션 연동용)
   const startAudioAnalysis = useCallback(async () => {
